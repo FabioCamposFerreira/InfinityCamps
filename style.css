@@ -1,0 +1,170 @@
+:root {
+  /* ===== CORES PRINCIPAIS ===== */
+  --color-primary: #3b82f6;      /* Azul principal */
+  --color-secondary: #10b981;    /* Verde secundário */
+  --color-accent: #f59e0b;       /* Amarelo/laranja de destaque */
+  --color-neutral: #6b7280;      /* Cinza neutro */
+  --color-danger: #ef4444;       /* Vermelho para erros/alertas */
+
+  /* ===== VARIAÇÕES DAS CORES PRINCIPAIS ===== */
+  --color-primary-light: #93c5fd;
+  --color-primary-dark: #1d4ed8;
+  --color-secondary-light: #6ee7b7;
+  --color-secondary-dark: #047857;
+  --color-accent-light: #fbbf24;
+  --color-accent-dark: #d97706;
+
+  /* ===== CORES DE FUNDO ===== */
+  --bg-primary: #ffffff;         /* Fundo principal */
+  --bg-secondary: #f8fafc;       /* Fundo secundário */
+  --bg-tertiary: #f1f5f9;        /* Fundo terciário */
+  --bg-dark: #1e293b;            /* Fundo escuro */
+  --bg-overlay: rgba(0, 0, 0, 0.5); /* Overlay/modal */
+
+  /* ===== CORES DE TEXTO ===== */
+  --text-primary: #1e293b;       /* Texto principal */
+  --text-secondary: #64748b;     /* Texto secundário */
+  --text-muted: #94a3b8;         /* Texto esmaecido */
+  --text-inverse: #ffffff;       /* Texto em fundos escuros */
+  --text-link: var(--color-primary);
+  --text-link-hover: var(--color-primary-dark);
+
+  /* ===== CORES DE BOTÕES ===== */
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: var(--color-primary-dark);
+  --btn-primary-active: #1e40af;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-text: var(--color-primary);
+  --btn-secondary-border: var(--color-primary);
+  --btn-secondary-hover: var(--color-primary);
+  --btn-secondary-hover-text: #ffffff;
+
+  --btn-danger-bg: var(--color-danger);
+  --btn-danger-text: #ffffff;
+  --btn-danger-hover: #dc2626;
+
+  /* ===== BORDAS ===== */
+  --border-color: #e2e8f0;
+  --border-color-dark: #cbd5e1;
+  --border-radius-sm: 4px;
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-full: 9999px;
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* ===== ESPAÇAMENTOS ===== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ===== TIPOGRAFIA ===== */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-secondary: 'Georgia', serif;
+  --font-family-mono: 'Fira Code', monospace;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ===== SOMBRAS ===== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* ===== TRANSIÇÕES ===== */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+
+  /* ===== BREAKPOINTS (para uso em media queries) ===== */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ===== Z-INDEX ===== */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* ===== LARGURAS MÁXIMAS ===== */
+  --max-width-xs: 320px;
+  --max-width-sm: 384px;
+  --max-width-md: 448px;
+  --max-width-lg: 512px;
+  --max-width-xl: 576px;
+  --max-width-2xl: 672px;
+  --max-width-container: 1200px;
+
+  /* ===== ALTURAS ===== */
+  --header-height: 64px;
+  --footer-height: 80px;
+  --sidebar-width: 280px;
+
+  /* ===== CORES DE STATUS ===== */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  --color-success-light: #d1fae5;
+  --color-warning-light: #fef3c7;
+  --color-error-light: #fee2e2;
+  --color-info-light: #dbeafe;
+}
+
+/* ===== MODO ESCURO ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --border-color-dark: #475569;
+  }
+}
+
+/* Ou você pode usar uma classe para modo escuro */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --border-color-dark: #475569;
+}
