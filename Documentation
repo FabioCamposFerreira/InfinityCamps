@@ -1,0 +1,19 @@
+# Infinity Campos
+
+// TODO: descrição do projeto
+
+## Funcionalidades
+- TRilha/arvore de cursos
+- Todo o conteudo do curso em marckdown
+- Registrar onde o aluno parou via chache local navegador
+- Submissão de certificaos, o aluno pode comcluitr o curso a hora que ele quiser, fazendo uma prova escrita com correção manual onde ele clica em envia e eu recebo e corrigo, no banco fica salva o cpodigo do certificado como bloqueado até eu corrigir a prova, e liberar o certificado para o aluno, ou seja, desbloquear o código do certificado para o aluno. pode me enviar a prova ou via email ou via forms (de forma altomativa dentro do site)
+
+## Front-End
+
+### Referencias
+ - Mendix Academy que tem os slides com a paginação ao lado
+ 
+
+ ### Tecnologias    
+ - Framework: Não sei ainda a linguagem (react,vue, angular, ect)(provavelmente angular)
+ - Banco de dados: acho que não vai ter usar somente chach local, mas se tiver que usar banco de dados, acho que vou usar o mongoDB, superbase, etc.
