@@ -1,0 +1,162 @@
+/* =============================================
+   RESET BÁSICO
+   Remove margens e padding padrão do navegador
+   ============================================= */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* =============================================
+   CORPO DA PÁGINA
+   Define fonte, cor de fundo e cor do texto
+   ============================================= */
+body {
+  font-family: Arial, sans-serif;  /* fonte legível para texto longo */
+  background: #f4f4f4;             /* cinza claro de fundo */
+  color: #222222;                  /* texto quase preto */
+}
+
+/* =============================================
+   CABEÇALHO (header)
+   Barra azul no topo com logo e categoria
+   ============================================= */
+header {
+  background: #6797c7;             /* azul do portal */
+  padding: 12px 20px;
+  display: flex;                   /* logo e categoria lado a lado */
+}
+
+/* Área que envolve a logo */
+.logo-area {
+  margin: 0 auto 0 0;             /* empurra para a esquerda */
+}
+
+/* Imagem da logo */
+.logo-area img {
+  height: 40px;                   /* tamanho fixo da logo */
+}
+
+/* Link da categoria no canto direito */
+.categoria a {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+/* =============================================
+   CONTEÚDO PRINCIPAL
+   Caixa branca centralizada onde fica o texto
+   ============================================= */
+.conteudo {
+  background: #ffffff;
+  width: 760px;                    /* largura fixa do artigo */
+  margin: 30px auto;               /* centraliza horizontalmente */
+  padding: 30px;
+}
+
+/* =============================================
+   TÍTULOS
+   h1 = título principal  |  h2 = subtítulo
+   ============================================= */
+h1 {
+  font-size: 28px;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+}
+
+h2 {
+  font-size: 18px;
+  color: #444444;
+  font-weight: normal;             /* subtítulo mais leve que o h1 */
+  margin-bottom: 20px;
+}
+
+/* =============================================
+   META (autor + data)
+   ============================================= */
+.meta {
+  color: #888888;                  /* cinza para ser secundário */
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* =============================================
+   IMAGEM DE DESTAQUE
+   Foto principal logo abaixo dos títulos
+   ============================================= */
+.imagem-destaque {
+  margin-bottom: 24px;
+}
+
+.imagem-destaque img {
+  display: block;
+  width: 100%;                     /* ocupa toda a largura do conteúdo */
+  height: 420px;
+  margin: 0 auto;                  /* centraliza o elemento */
+  object-fit: cover;               /* recorta a imagem sem distorcer */
+  object-position: center;         /* foca no centro da imagem */
+}
+
+/* =============================================
+   PARÁGRAFOS DO TEXTO
+   ============================================= */
+p {
+  font-size: 16px;
+  color: #333333;
+  margin-bottom: 18px;
+}
+
+/* =============================================
+   CITAÇÃO
+   Destaque visual para a fala do entrevistado
+   ============================================= */
+.citacao {
+  background: #f0f5fb;             /* fundo azul bem claro */
+  color: #444444;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+/* =============================================
+   GALERIA DE FOTOS
+   Grade com 3 colunas usando display flex
+   ============================================= */
+
+/* Título da seção de fotos */
+.conteudo h2 {
+  font-size: 20px;
+  color: #6797c7;                  /* azul do portal */
+  margin-bottom: 16px;
+  margin-top: 30px;
+}
+
+/* Container da grade */
+.galeria {
+  display: flex;                   /* coloca os filhos lado a lado */
+  margin-bottom: 30px;
+}
+
+/* Cada item da grade */
+.foto {
+  width: 33%;                      /* 3 colunas iguais */
+  padding: 4px;
+}
+
+/* Imagem dentro de cada item */
+.foto img {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+/* =============================================
+   LINK PARA MATÉRIA ORIGINAL
+   ============================================= */
+.link-original {
+  margin-top: 10px;
+}
+
+.link-original a {
+  color: #6797c7;
+  font-size: 14px;
+}
