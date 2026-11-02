@@ -1,0 +1,92 @@
+---
+import ModuleMap from './ui/ModuleMap.astro';
+
+interface ModuleItem {
+  id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  number: string;
+  status?: 'locked' | 'available' | 'in-progress' | 'completed';
+  color?: string;
+  link?: string;
+}
+
+interface Props {
+  items?: ModuleItem[];
+  layout?: 'horizontal' | 'vertical' | 'grid';
+  showProgress?: boolean;
+  overallProgress?: number;
+}
+
+const {
+  items: initialItems = [],
+  layout = 'horizontal',
+  showProgress = true,
+  overallProgress = 0,
+} = Astro.props;
+
+let items = initialItems;
+---
+
+<div id="module-list">
+  {!items || items.length === 0 ? (
+    <p class="module-empty">Ainda não há módulos disponíveis.</p>
+  ) : (
+    <ModuleMap
+      modules={items}
+      layout={layout}
+      showProgress={showProgress}
+      overallProgress={overallProgress}
+    />
+  )}
+</div>
+
+<script>
+  interface ModuleItem {
+    id: string;
+    title: string;
+    description: string;
+    icon?: string;
+    number: string;
+    status?: 'locked' | 'available' | 'in-progress' | 'completed';
+    color?: string;
+    link?: string;
+  }
+
+  // Expose a method to set items dynamically
+  const container = document.getElementById('module-list');
+  if (container) {
+    (container as any).setItems = (newItems: ModuleItem[]) => {
+      const empty = container.querySelector('.module-empty');
+      const map = container.querySelector('.module-map');
+
+      if (!newItems || newItems.length === 0) {
+        if (map) map.remove();
+        if (!empty) {
+          const emptyMsg = document.createElement('p');
+          emptyMsg.className = 'module-empty';
+          emptyMsg.textContent = 'Ainda não há módulos disponíveis.';
+          container.appendChild(emptyMsg);
+        }
+        return;
+      }
+
+      if (empty) empty.remove();
+      if (!map) {
+        // For dynamic updates, we would need to recreate the ModuleMap
+        // For now, trigger a page reload to refresh the component
+        window.location.reload();
+      }
+    };
+  }
+</script>
+
+<style>
+  .module-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--muted, #666);
+    font-size: 14px;
+  }
+</style>

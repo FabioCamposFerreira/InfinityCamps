@@ -1,0 +1,42 @@
+---
+interface Props {
+  chapterId: string;
+  chapterIndex?: number;
+  prevHref?: string;
+  nextHref?: string;
+}
+
+const { chapterId, chapterIndex = 0, prevHref, nextHref } = Astro.props;
+---
+
+<div id="chapter-root" data-chapter-id={chapterId} data-chapter-index={chapterIndex} class="chapter-controls">
+  <button id="btn-prev" class="btn btn-ghost prev" type="button" data-href={prevHref} disabled={!prevHref}>
+    ← Anterior
+  </button>
+  <button id="btn-mark" class="btn btn-primary mark" type="button">
+    Marcar Concluído
+  </button>
+  <button
+    id="btn-next"
+    class="btn btn-ghost next"
+    type="button"
+    data-href={nextHref}
+    data-has-next={nextHref ? 'true' : 'false'}
+    disabled={!nextHref}
+  >
+    Próximo →
+  </button>
+</div>
+
+<script>
+  import { initChapterControls } from '../lib/client/chapter.js';
+
+  document.querySelectorAll<HTMLButtonElement>('#chapter-root [data-href]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const href = button.dataset.href;
+      if (href && !button.disabled) window.location.assign(href);
+    });
+  });
+
+  initChapterControls();
+</script>

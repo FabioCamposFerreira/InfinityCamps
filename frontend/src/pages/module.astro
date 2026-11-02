@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+
+// Conteúdo de exemplo (placeholder) migrado de module.html.
+const chapters = [
+  { title: 'Capítulo 0 — Introdução', summary: 'Visão geral.', href: '/chapter' },
+  { title: 'Capítulo 1 — Estrutura HTML', summary: 'Básico de tags e estrutura.', href: '/chapter' },
+];
+---
+
+<BaseLayout title="Módulo — InfinityCamps">
+  <div class="container">
+    <AppHeader page="module" />
+
+    <div class="header">
+      <h1>Módulo 1 — Fundamentos</h1>
+      <nav class="nav"><a class="btn" href="/">Voltar</a></nav>
+    </div>
+
+    <section>
+      <h2>Capítulos</h2>
+      {chapters.map((chapter) => (
+        <div class="course-card">
+          <h4>{chapter.title}</h4>
+          <p>{chapter.summary}</p>
+          <a class="btn" href={chapter.href}>Abrir capítulo</a>
+        </div>
+      ))}
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import { checkAuth } from '../lib/client/auth-guard.js';
+  checkAuth();
+</script>

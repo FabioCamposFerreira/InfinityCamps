@@ -1,0 +1,187 @@
+---
+import ModuleNode from './ModuleNode.astro';
+import TrackLine from './TrackLine.astro';
+
+interface ModuleItem {
+  id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  number: string;
+  status?: 'locked' | 'available' | 'in-progress' | 'completed';
+  color?: string;
+  link?: string;
+}
+
+interface Props {
+  modules: ModuleItem[];
+  layout?: 'horizontal' | 'vertical' | 'grid';
+  showProgress?: boolean;
+  overallProgress?: number;
+}
+
+const {
+  modules,
+  layout = 'horizontal',
+  showProgress = true,
+  overallProgress = 0,
+} = Astro.props;
+
+const layoutClass = `layout-${layout}`;
+---
+
+<div class={`module-map ${layoutClass}`}>
+  {showProgress && (
+    <div class="progress-header">
+      <div class="progress-track">
+        <TrackLine
+          color="#00d4ff"
+          width={4}
+          animated={true}
+          progress={overallProgress}
+        />
+      </div>
+      <div class="progress-train" style={`left: ${overallProgress}%`}>
+        <span class="train-icon">🚂</span>
+      </div>
+    </div>
+  )}
+
+  <div class="modules-container">
+    {modules.map((module, index) => (
+      <div class="module-item">
+        {index > 0 && (
+          <TrackLine
+            color={modules[index - 1].color || '#666'}
+            width={4}
+            progress={module.status === 'completed' ? 100 : module.status === 'in-progress' ? 50 : 0}
+          />
+        )}
+        <ModuleNode
+          title={module.title}
+          description={module.description}
+          icon={module.icon}
+          number={module.number}
+          status={module.status}
+          color={module.color}
+          onClick={module.link ? `window.location.href='${module.link}'` : undefined}
+        />
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .module-map {
+    position: relative;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .progress-header {
+    position: relative;
+    margin-bottom: 60px;
+    padding: 0 40px;
+  }
+
+  .progress-track {
+    position: relative;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  .progress-train {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: left 0.5s ease-out;
+  }
+
+  .train-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8));
+  }
+
+  /* Horizontal Layout */
+  .layout-horizontal .modules-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .layout-horizontal .module-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .layout-horizontal .module-item .track-line {
+    flex: 1;
+    height: 4px;
+  }
+
+  /* Vertical Layout */
+  .layout-vertical .modules-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .layout-vertical .module-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .layout-vertical .module-item .track-line {
+    width: 4px;
+    height: 40px;
+  }
+
+  /* Grid Layout */
+  .layout-grid .modules-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    padding: 20px;
+  }
+
+  .layout-grid .module-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .layout-grid .module-item .track-line {
+    display: none; /* Hide lines in grid layout */
+  }
+
+  @media (max-width: 768px) {
+    .layout-horizontal .modules-container {
+      flex-direction: column;
+    }
+
+    .layout-horizontal .module-item {
+      flex-direction: column;
+    }
+
+    .layout-horizontal .module-item .track-line {
+      width: 4px;
+      height: 40px;
+      flex: none;
+    }
+  }
+</style>

@@ -1,0 +1,101 @@
+---
+type InputType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+
+interface Props {
+  type?: InputType;
+  name?: string;
+  id?: string;
+  placeholder?: string;
+  value?: string;
+  disabled?: boolean;
+  required?: boolean;
+  autocomplete?: string;
+  ariaLabel?: string;
+  error?: string;
+  class?: string;
+}
+
+const {
+  type = 'text',
+  name,
+  id,
+  placeholder,
+  value,
+  disabled = false,
+  required = false,
+  autocomplete,
+  ariaLabel,
+  error,
+  class: extraClass = '',
+} = Astro.props;
+
+const baseClass = 'input';
+const errorClass = error ? 'input-error' : '';
+const classes = [baseClass, errorClass, extraClass].filter(Boolean).join(' ');
+---
+
+<div class="input-wrapper">
+  <input
+    id={id}
+    name={name}
+    type={type}
+    class={classes}
+    placeholder={placeholder}
+    value={value}
+    disabled={disabled}
+    required={required}
+    autocomplete={autocomplete}
+    aria-label={ariaLabel}
+    aria-invalid={error ? 'true' : undefined}
+    aria-describedby={error ? `${id}-error` : undefined}
+  />
+  {error && (
+    <span id={`${id}-error`} class="input-error-message" role="alert">
+      {error}
+    </span>
+  )}
+</div>
+
+<style>
+  .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--surface, #fff);
+    color: var(--ink, #1d3557);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: var(--accent, #0066cc);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  }
+
+  .input:disabled {
+    background: var(--surface-disabled, #f5f5f5);
+    cursor: not-allowed;
+  }
+
+  .input-error {
+    border-color: #dc3545;
+  }
+
+  .input-error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+  }
+
+  .input-error-message {
+    font-size: 12px;
+    color: #dc3545;
+  }
+</style>

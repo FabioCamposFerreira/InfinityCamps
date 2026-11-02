@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCourses, slugify } from '../lib/server/learn.js';
+import { listModules } from '../lib/server/chapters.js';
+
+// Rota antiga: /chapter?course=<slug>&module=<slug>[&chapter=<id>]
+//          → /<curso>/<módulo>#capitulo-<id>
+const legacyRoutes = {};
+for (const course of await getCourses()) {
+  for (const item of await listModules(course.slug)) {
+    legacyRoutes[`${slugify(course.folder)}/${slugify(item.folder)}`] = `/${course.slug}/${item.slug}`;
+  }
+}
+const legacyMap = JSON.stringify(legacyRoutes);
+---
+
+<BaseLayout title="InfinityCamps">
+  <script is:inline define:vars={{ legacyMap }}>
+    (function () {
+      var routes = JSON.parse(legacyMap);
+      var params = new URLSearchParams(window.location.search);
+      var key = (params.get('course') || '') + '/' + (params.get('module') || '');
+      var chapter = params.get('chapter') || '';
+      var target = routes[key];
+      if (!target) {
+        window.location.replace('/');
+        return;
+      }
+      window.location.replace(chapter ? target + '#capitulo-' + chapter : target);
+    })();
+  </script>
+  <p class="legacy-redirect">Redirecionando… <a href="/">Ir para o catálogo</a></p>
+</BaseLayout>
+
+<style>
+  .legacy-redirect {
+    padding: 24px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--muted, #94a3b8);
+  }
+</style>

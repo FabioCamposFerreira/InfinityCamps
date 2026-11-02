@@ -1,0 +1,23 @@
+{
+  "name": "infinitycamps",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:astro": "astro dev",
+    "build:astro": "astro build",
+    "test": "node tests/run-tests.js",
+    "chapters:split": "node scripts/split-chapters.mjs",
+    "chapters:check": "node scripts/check-chapters.mjs",
+    "workers:dev": "cd workers && wrangler dev",
+    "migrate": "node scripts/migrate_sqlite.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1"
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.1.2",
+    "astro": "^7.4.3"
+  }
+}

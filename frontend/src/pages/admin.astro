@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+import PendingAccountList from '../components/PendingAccountList.astro';
+---
+
+<BaseLayout title="InfinityCamps — Administração" bodyClass="admin-page">
+  <AppHeader page="admin" />
+
+  <div class="container">
+    <main class="admin-content">
+      <h2>Administração de contas</h2>
+      <p class="admin-intro">Contas aguardando aprovação</p>
+      <PendingAccountList />
+    </main>
+  </div>
+</BaseLayout>
+
+<script>
+  // Quem não for administrador volta ao catálogo; a API também valida o papel (401/403).
+  try {
+    const token = localStorage.getItem('jwt');
+    const claims = token
+      ? JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      : null;
+    if (!claims) window.location.replace(`/login?returnTo=${encodeURIComponent('/admin')}`);
+    else if (claims.role !== 'admin') window.location.replace('/');
+  } catch {
+    window.location.replace('/login');
+  }
+</script>

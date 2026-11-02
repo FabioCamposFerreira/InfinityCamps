@@ -1,0 +1,6 @@
+{
+  "debugPortAddress": "127.0.0.1:56112",
+  "defaultEntrypointService": "core:user:infinitycamps-workers",
+  "userWorkerService": "core:user:infinitycamps-workers",
+  "instanceId": "bef1ab2c-50db-4bf1-b4e8-d4795c91d213"
+}

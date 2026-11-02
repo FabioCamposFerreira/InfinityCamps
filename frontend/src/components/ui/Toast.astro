@@ -1,0 +1,186 @@
+---
+type Variant = 'success' | 'error' | 'warning' | 'info';
+type Position = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';
+
+interface Props {
+  id?: string;
+  variant?: Variant;
+  position?: Position;
+  duration?: number;
+  title?: string;
+}
+
+const {
+  id = 'toast-container',
+  variant = 'info',
+  position = 'top-right',
+  duration = 5000,
+  title,
+} = Astro.props;
+---
+
+<div id={id} class={`toast-container toast-position-${position}`} aria-live="polite" aria-atomic="true">
+</div>
+
+<script define:vars={{ id, variant, duration }}>
+  interface ToastMessage {
+    message: string;
+    variant?: 'success' | 'error' | 'warning' | 'info';
+    title?: string;
+    duration?: number;
+  }
+
+  const container = document.getElementById(id);
+  if (!container) return;
+
+  function show({ message, variant: msgVariant = 'info', title: msgTitle, duration: msgDuration }: ToastMessage) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${msgVariant}`;
+    
+    let html = '';
+    if (msgTitle) {
+      html += `<div class="toast-title">${msgTitle}</div>`;
+    }
+    html += `<div class="toast-message">${message}</div>`;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.ariaLabel = 'Fechar';
+    closeBtn.onclick = () => dismiss(toast);
+    
+    toast.innerHTML = html;
+    toast.appendChild(closeBtn);
+    container.appendChild(toast);
+
+    // Auto dismiss
+    const dismissAfter = msgDuration ?? duration;
+    if (dismissAfter > 0) {
+      setTimeout(() => dismiss(toast), dismissAfter);
+    }
+
+    return toast;
+  }
+
+  function dismiss(toast: HTMLElement) {
+    toast.classList.add('toast-dismissing');
+    setTimeout(() => toast.remove(), 300);
+  }
+
+  // Expose methods
+  (container as any).show = show;
+  (container as any).dismiss = dismiss;
+  (container as any).clear = () => {
+    container.innerHTML = '';
+  };
+</script>
+
+<style>
+  .toast-container {
+    position: fixed;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast-position-top-right {
+    top: 16px;
+    right: 16px;
+  }
+
+  .toast-position-top-left {
+    top: 16px;
+    left: 16px;
+  }
+
+  .toast-position-bottom-right {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .toast-position-bottom-left {
+    bottom: 16px;
+    left: 16px;
+  }
+
+  .toast-position-top-center {
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .toast-position-bottom-center {
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .toast {
+    pointer-events: auto;
+    min-width: 300px;
+    max-width: 400px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    background: var(--surface, #fff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .toast-dismissing {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  .toast-success {
+    border-left: 4px solid #28a745;
+  }
+
+  .toast-error {
+    border-left: 4px solid #dc3545;
+  }
+
+  .toast-warning {
+    border-left: 4px solid #ffc107;
+  }
+
+  .toast-info {
+    border-left: 4px solid #17a2b8;
+  }
+
+  .toast-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink, #1d3557);
+  }
+
+  .toast-message {
+    font-size: 13px;
+    color: var(--muted, #666);
+  }
+
+  .toast-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--muted, #666);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .toast-close:hover {
+    opacity: 1;
+  }
+</style>

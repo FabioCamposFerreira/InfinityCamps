@@ -1,0 +1,7 @@
+{
+  "title": "Introdução a HTML e CSS",
+  "slug": "html-e-css",
+  "description": "Primeiros passos em HTML e CSS: estrutura da página, tags, estilos inline, tag style e arquivo externo.",
+  "image": "cover.svg",
+  "access": "locked"
+}

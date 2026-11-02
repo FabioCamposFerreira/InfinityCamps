@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCourses, slugify } from '../lib/server/learn.js';
+
+// Rota antiga: /course?course=<slug> → /<slug>
+const legacySlugs = {};
+for (const course of await getCourses()) {
+  legacySlugs[slugify(course.folder)] = course.slug;
+}
+const legacyMap = JSON.stringify(legacySlugs);
+---
+
+<BaseLayout title="InfinityCamps">
+  <script is:inline define:vars={{ legacyMap }}>
+    (function () {
+      var slugs = JSON.parse(legacyMap);
+      var legacy = new URLSearchParams(window.location.search).get('course') || '';
+      var target = slugs[legacy];
+      window.location.replace(target ? '/' + target : '/');
+    })();
+  </script>
+  <p class="legacy-redirect">Redirecionando… <a href="/">Ir para o catálogo</a></p>
+</BaseLayout>
+
+<style>
+  .legacy-redirect {
+    padding: 24px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--muted, #94a3b8);
+  }
+</style>

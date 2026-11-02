@@ -1,0 +1,677 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppHeader from '../../components/AppHeader.astro';
+import Breadcrumb from '../../components/ui/Breadcrumb.astro';
+import Alert from '../../components/ui/Alert.astro';
+import ChapterSidebar from '../../components/ChapterSidebar.astro';
+import ChapterToolbar from '../../components/ChapterToolbar.astro';
+import { getCourses } from '../../lib/server/learn.js';
+import { listModules } from '../../lib/server/chapters.js';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const course of await getCourses()) {
+    for (const module of await listModules(course.slug)) {
+      paths.push({ params: { course: course.slug, module: module.slug } });
+    }
+  }
+  return paths;
+}
+---
+
+<BaseLayout title="Capítulo — InfinityCamps" bodyClass="chapter-page">
+  <AppHeader page="chapter" />
+
+  <div class="chapter-shell">
+    <ChapterSidebar />
+
+    <main class="chapter-main" id="chapter-main" data-course={Astro.params.course} data-module={Astro.params.module}>
+      <Breadcrumb />
+
+      <Alert id="chapter-alert" variant="warning" role="status" ariaLive="polite" hidden />
+
+      <div id="chapter-loading" class="chapter-loading" role="status">
+        <span class="chapter-loading-bar" aria-hidden="true"></span>
+        <span class="chapter-loading-bar chapter-loading-bar-short" aria-hidden="true"></span>
+        <span class="chapter-loading-bar" aria-hidden="true"></span>
+        <span class="chapter-loading-text">Carregando capítulo…</span>
+      </div>
+
+      <div id="chapter-stack" hidden></div>
+
+      <ChapterToolbar />
+    </main>
+  </div>
+
+  <button id="slide-prev" class="slide-arrow slide-arrow-prev" type="button" aria-label="Slide anterior">‹</button>
+  <button id="slide-next" class="slide-arrow slide-arrow-next" type="button" aria-label="Próximo slide">›</button>
+</BaseLayout>
+
+<script>
+  import { initChapterPage } from '../../lib/client/chapter-page.js';
+
+  initChapterPage().catch((error) => {
+    console.error('Não foi possível iniciar a página do capítulo:', error);
+  });
+</script>
+
+<style is:global>
+  /* Estilos globais por necessidade: o conteúdo dos capítulos é criado no
+     navegador depois da leitura do markdown, fora do escopo do Astro. */
+
+  .chapter-shell {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 0;
+    align-items: start;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .chapter-main {
+    width: 100%;
+    min-width: 0;
+    padding: 0 0 24px;
+  }
+
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---- Estados de carregamento e vazio ---- */
+
+  .chapter-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px 0;
+  }
+
+  .chapter-loading-bar {
+    display: block;
+    height: 16px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--surface, #1e293b) 25%, var(--nav-bg, #334155) 50%, var(--surface, #1e293b) 75%);
+    background-size: 200% 100%;
+    animation: chapter-shimmer 1.4s ease-in-out infinite;
+  }
+
+  .chapter-loading-bar-short {
+    width: 60%;
+  }
+
+  .chapter-loading-text {
+    font-size: 14px;
+    color: var(--muted, #94a3b8);
+  }
+
+  @keyframes chapter-shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chapter-loading-bar {
+      animation: none;
+    }
+  }
+
+  .chapter-empty {
+    padding: 32px 24px;
+    border: 1px dashed var(--card-border, #334155);
+    border-radius: var(--border-radius, 0.5rem);
+    color: var(--muted, #94a3b8);
+    text-align: center;
+  }
+
+  .chapter-empty a,
+  #chapter-alert a {
+    color: var(--accent, #3b82f6);
+  }
+
+  /* ---- Capítulo ---- */
+
+  .chapter {
+    min-height: 60vh;
+    scroll-margin-top: 16px;
+  }
+
+  .chapter + .chapter {
+    margin-top: 48px;
+    padding-top: 40px;
+    border-top: 1px solid var(--card-border, #334155);
+  }
+
+  .chapter-head {
+    margin-bottom: 24px;
+  }
+
+  .chapter-eyebrow {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent, #3b82f6);
+  }
+
+  .chapter-title {
+    margin: 0 0 8px;
+    font-size: 28px;
+    line-height: 1.25;
+    color: var(--text, #f1f5f9);
+  }
+
+  .chapter-title:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  .chapter-meta {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted, #94a3b8);
+  }
+
+  /* ---- Conteúdo markdown ---- */
+
+  .chapter-content {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text, #f1f5f9);
+  }
+
+  .chapter-content > :first-child {
+    margin-top: 0;
+  }
+
+  .chapter-content p {
+    margin: 0 0 16px;
+  }
+
+  .chapter-content h2,
+  .chapter-content h3,
+  .chapter-content h4,
+  .chapter-content h5,
+  .chapter-content h6 {
+    scroll-margin-top: 16px;
+    margin: 32px 0 12px;
+    line-height: 1.3;
+    color: var(--text, #f1f5f9);
+  }
+
+  .chapter-content h2 {
+    font-size: 22px;
+  }
+
+  .chapter-content h3 {
+    font-size: 18px;
+  }
+
+  .chapter-content h4,
+  .chapter-content h5,
+  .chapter-content h6 {
+    font-size: 16px;
+  }
+
+  .chapter-content ul,
+  .chapter-content ol {
+    margin: 0 0 16px;
+    padding-left: 24px;
+  }
+
+  .chapter-content li {
+    margin-bottom: 6px;
+  }
+
+  .chapter-content li > ul,
+  .chapter-content li > ol {
+    margin: 6px 0 0;
+  }
+
+  .chapter-content a {
+    color: var(--accent, #3b82f6);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .chapter-image-missing {
+    display: block;
+    margin: 8px 0 16px;
+    padding: 12px 16px;
+    border: 1px dashed var(--card-border, #334155);
+    border-radius: 8px;
+    color: var(--muted, #94a3b8);
+    font-size: 14px;
+  }
+
+  .chapter-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0 16px;
+  }
+
+  .chapter-content hr {
+    margin: 28px 0;
+    border: 0;
+    border-top: 1px solid var(--card-border, #334155);
+  }
+
+  .chapter-content blockquote {
+    margin: 0 0 16px;
+    padding: 4px 0 4px 16px;
+    border-left: 3px solid var(--accent, #3b82f6);
+    color: var(--muted, #94a3b8);
+  }
+
+  .chapter-content blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  .chapter-content :not(pre) > code {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--input-bg, #1e293b);
+    border: 1px solid var(--input-border, #475569);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+
+  .chapter-table {
+    margin: 0 0 20px;
+    overflow-x: auto;
+  }
+
+  .chapter-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  .chapter-table th,
+  .chapter-table td {
+    padding: 8px 12px;
+    border: 1px solid var(--card-border, #334155);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .chapter-table th {
+    background: var(--surface, #1e293b);
+    font-weight: 600;
+  }
+
+  .chapter-table .is-center {
+    text-align: center;
+  }
+
+  .chapter-table .is-right {
+    text-align: right;
+  }
+
+  .chapter-code-block {
+    position: relative;
+    margin: 0 0 20px;
+  }
+
+  .chapter-code-block pre {
+    margin: 0;
+    padding: 16px;
+    background: #0b1220;
+    color: #e2e8f0;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.55;
+    tab-size: 2;
+  }
+
+  .chapter-code-block code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  /* ---- Cores do realce de sintaxe ---- */
+
+  .chapter-code-block .tok-comment {
+    color: #64748b;
+    font-style: italic;
+  }
+
+  .chapter-code-block .tok-tag,
+  .chapter-code-block .tok-property {
+    color: #7dd3fc;
+  }
+
+  .chapter-code-block .tok-attr {
+    color: #fbbf24;
+  }
+
+  .chapter-code-block .tok-string,
+  .chapter-code-block .tok-value {
+    color: #86efac;
+  }
+
+  .chapter-code-block .tok-selector {
+    color: #f0abfc;
+  }
+
+  .chapter-code-block .tok-keyword {
+    color: #c084fc;
+  }
+
+  .chapter-code-block .tok-number {
+    color: #fca5a5;
+  }
+
+  .chapter-code-block .tok-punct {
+    color: #94a3b8;
+  }
+
+  /* ---- Proteção de cópia para aluno ---- */
+
+  body[data-copy-protection='on'] .chapter-content {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ---- Blocos do conteúdo (: : : exercicio / resposta / dica) ---- */
+
+  .chapter-card {
+    margin: 22px 0;
+    padding: 18px 20px;
+    background: var(--surface, #1e293b);
+    border: 1px solid var(--card-border, #334155);
+    border-radius: var(--border-radius, 0.5rem);
+  }
+
+  .chapter-card > :last-child {
+    margin-bottom: 0;
+  }
+
+  .chapter-card-exercise {
+    border-left: 4px solid var(--accent, #3b82f6);
+  }
+
+  .chapter-card-dica {
+    border-left: 4px solid #eab308;
+  }
+
+  .chapter-card-label {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted, #94a3b8);
+  }
+
+  .chapter-answer {
+    margin: 18px 0;
+    padding: 4px 16px;
+    border: 1px dashed var(--card-border, #334155);
+    border-radius: var(--border-radius, 0.5rem);
+  }
+
+  .chapter-answer > summary {
+    padding: 10px 0;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--accent, #3b82f6);
+  }
+
+  .chapter-answer[open] > summary {
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--card-border, #334155);
+  }
+
+  .chapter-answer > :last-child {
+    margin-bottom: 16px;
+  }
+
+  /* ---- Erro de formatação no conteúdo ---- */
+
+  .chapter-format-error {
+    margin-top: 8px;
+    padding: 20px 24px;
+    border: 1px solid rgba(220, 53, 69, 0.45);
+    border-left: 4px solid #dc3545;
+    border-radius: var(--border-radius, 0.5rem);
+    background: rgba(220, 53, 69, 0.08);
+  }
+
+  .chapter-format-error-title {
+    margin: 0 0 4px;
+    font-weight: 600;
+    color: var(--text, #f1f5f9);
+  }
+
+  .chapter-format-error-text {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted, #94a3b8);
+  }
+
+  /* ---- Próximo capítulo bloqueado ---- */
+
+  .chapter-gate {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 40px;
+    padding: 20px 24px;
+    border: 1px dashed var(--card-border, #334155);
+    border-radius: var(--border-radius, 0.5rem);
+    background: color-mix(in srgb, var(--surface, #1e293b) 60%, transparent);
+  }
+
+  .chapter-gate-icon {
+    font-size: 22px;
+  }
+
+  .chapter-gate-title {
+    margin: 0 0 2px;
+    font-weight: 600;
+    color: var(--text, #f1f5f9);
+  }
+
+  .chapter-gate-text {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted, #94a3b8);
+  }
+
+  /* ---- Slides ---- */
+
+  .slide {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 72px 8vw;
+    scroll-snap-align: start;
+  }
+
+  .slide + .slide {
+    border-top: 1px solid var(--card-border, #334155);
+  }
+
+  .slide-cover {
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: 48px;
+    padding-bottom: 44px;
+  }
+
+  .slide h2 {
+    font-size: 44px;
+    line-height: 1.1;
+    margin: 0 0 22px;
+    letter-spacing: -0.02em;
+  }
+
+  .slide h3 {
+    font-size: 26px;
+  }
+
+  .slide p,
+  .slide li {
+    font-size: 20px;
+    line-height: 1.65;
+  }
+
+  .slide p {
+    max-width: 920px;
+  }
+
+  .slide table {
+    font-size: 17px;
+  }
+
+  .slide pre {
+    font-size: 15px;
+  }
+
+  .slide.has-media {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    column-gap: 56px;
+    align-content: center;
+    align-items: center;
+  }
+
+  .slide.has-media > .slide-copy {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .slide-media {
+    grid-column: 2;
+    min-width: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .slide-media img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 62vh;
+    margin: 0;
+    border-radius: 16px;
+    object-fit: contain;
+  }
+
+  .slide-arrow {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--card-border, #334155);
+    border-radius: 50%;
+    background: rgba(30, 41, 59, 0.92);
+    color: var(--text, #f1f5f9);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 45;
+  }
+
+  .slide-arrow:hover {
+    background: var(--nav-bg, #334155);
+  }
+
+  .slide-arrow:focus-visible {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 2px;
+  }
+
+  .slide-arrow-prev {
+    left: 88px;
+  }
+
+  .slide-arrow-next {
+    right: 16px;
+  }
+
+  html:has(.chapter-shell) {
+    scroll-snap-type: y proximity;
+  }
+
+  .chapter {
+    min-height: 0;
+  }
+
+  .chapter + .chapter {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  @media (max-width: 960px) {
+    .chapter-shell {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      padding: 0;
+    }
+
+    .chapter-main {
+      width: 100%;
+      padding: 0 16px 16px;
+    }
+
+    .slide {
+      min-height: auto;
+      padding: 28px 0;
+    }
+
+    .slide h2 {
+      font-size: 30px;
+    }
+
+    .slide p,
+    .slide li {
+      font-size: 17px;
+    }
+
+    .slide.has-media {
+      display: flex;
+    }
+
+    .slide-arrow {
+      display: none;
+    }
+
+    html:has(.chapter-shell) {
+      scroll-snap-type: none;
+    }
+
+    .chapter-title {
+      font-size: 24px;
+    }
+
+    .chapter {
+      min-height: 0;
+    }
+  }
+</style>

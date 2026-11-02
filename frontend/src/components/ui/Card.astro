@@ -1,0 +1,62 @@
+---
+interface Props {
+  class?: string;
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  hoverable?: boolean;
+  bordered?: boolean;
+}
+
+const {
+  class: extraClass = '',
+  padding = 'md',
+  hoverable = false,
+  bordered = true,
+} = Astro.props;
+
+const baseClass = 'card';
+const paddingClass = `card-padding-${padding}`;
+const hoverableClass = hoverable ? 'card-hoverable' : '';
+const borderedClass = bordered ? 'card-bordered' : '';
+const classes = [baseClass, paddingClass, hoverableClass, borderedClass, extraClass].filter(Boolean).join(' ');
+---
+
+<div class={classes}>
+  <slot />
+</div>
+
+<style>
+  .card {
+    background: var(--surface, #fff);
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .card-bordered {
+    border: 1px solid var(--border, #e0e0e0);
+  }
+
+  .card-hoverable {
+    cursor: pointer;
+  }
+
+  .card-hoverable:hover {
+    border-color: var(--accent, #0066cc);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-padding-none {
+    padding: 0;
+  }
+
+  .card-padding-sm {
+    padding: 12px;
+  }
+
+  .card-padding-md {
+    padding: 16px;
+  }
+
+  .card-padding-lg {
+    padding: 24px;
+  }
+</style>

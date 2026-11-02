@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-labelledby="title description">
+  <title id="title">Web Full Stack</title>
+  <desc id="description">Ícone de código para a trilha Web Full Stack.</desc>
+  <path d="M25 42 10 57l15 15m70-30 15 15-15 15M68 33 52 81" fill="none" stroke="#27384d" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+  <circle cx="60" cy="105" r="3" fill="#53c86a"/>
+</svg>

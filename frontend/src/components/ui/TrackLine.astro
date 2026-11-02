@@ -1,0 +1,80 @@
+---
+interface Props {
+  color?: string;
+  width?: number;
+  curve?: 'none' | 'top' | 'bottom' | 'both';
+  animated?: boolean;
+  progress?: number; // 0-100
+}
+
+const {
+  color = '#666',
+  width = 4,
+  curve = 'none',
+  animated = false,
+  progress = 100,
+} = Astro.props;
+
+const curveClass = `curve-${curve}`;
+const animatedClass = animated ? 'track-animated' : '';
+---
+
+<div
+  class={`track-line ${curveClass} ${animatedClass}`}
+  style={`--track-color: ${color}; --track-width: ${width}px; --track-progress: ${progress}%`}
+>
+  <div class="track-fill"></div>
+</div>
+
+<style>
+  .track-line {
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .track-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--track-color);
+    width: var(--track-progress);
+    transition: width 0.5s ease-out;
+  }
+
+  .track-animated .track-fill {
+    background: linear-gradient(90deg, var(--track-color), #fff, var(--track-color));
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Horizontal line (default) */
+  .track-line {
+    height: var(--track-width);
+    width: 100%;
+  }
+
+  /* Curved lines - using SVG-like approach with border-radius */
+  .curve-top .track-fill {
+    border-radius: 0 var(--track-width) 0 0;
+  }
+
+  .curve-bottom .track-fill {
+    border-radius: 0 0 var(--track-width) 0;
+  }
+
+  .curve-both .track-fill {
+    border-radius: 0 var(--track-width) var(--track-width) 0;
+  }
+</style>

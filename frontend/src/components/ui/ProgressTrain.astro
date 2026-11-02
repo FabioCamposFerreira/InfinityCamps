@@ -1,0 +1,86 @@
+---
+interface Props {
+  progress: number; // 0-100
+  color?: string;
+  icon?: string;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const {
+  progress,
+  color = '#00d4ff',
+  icon = '🚂',
+  size = 'md',
+} = Astro.props;
+
+const sizeClass = `train-${size}`;
+---
+
+<div class={`progress-train ${sizeClass}`} style={`--train-color: ${color}; --train-progress: ${progress}%`}>
+  <div class="train-track">
+    <div class="train-track-fill"></div>
+  </div>
+  <div class="train-locomotive" style={`left: ${progress}%`}>
+    <span class="train-icon">{icon}</span>
+  </div>
+</div>
+
+<style>
+  .progress-train {
+    position: relative;
+    width: 100%;
+    height: 40px;
+  }
+
+  .train-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    transform: translateY(-50%);
+  }
+
+  .train-track-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--train-color);
+    width: var(--train-progress);
+    border-radius: 3px;
+    transition: width 0.5s ease-out;
+    box-shadow: 0 0 10px var(--train-color);
+  }
+
+  .train-locomotive {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: left 0.5s ease-out;
+    filter: drop-shadow(0 0 15px var(--train-color));
+  }
+
+  .train-icon {
+    font-size: 32px;
+    display: block;
+  }
+
+  .train-sm .train-icon {
+    font-size: 24px;
+  }
+
+  .train-lg .train-icon {
+    font-size: 40px;
+  }
+
+  .train-sm {
+    height: 30px;
+  }
+
+  .train-lg {
+    height: 50px;
+  }
+</style>

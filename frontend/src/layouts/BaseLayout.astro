@@ -1,0 +1,33 @@
+---
+interface Props {
+  title?: string;
+  bodyClass?: string;
+}
+
+const { title = 'InfinityCamps', bodyClass } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script is:inline>
+      // Aplica o tema salvo antes da primeira pintura, evitando "piscar".
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme-user-choice') === 'true' ? localStorage.getItem('theme') : null;
+          if (['light', 'dark', 'gray'].indexOf(saved) === -1) {
+            saved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', saved);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>

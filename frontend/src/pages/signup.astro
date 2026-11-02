@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+---
+
+<BaseLayout title="InfinityCamps — Criar conta">
+  <div class="container">
+    <AppHeader page="signup" />
+
+    <div class="auth-container">
+      <h2>Criar conta</h2>
+      <form id="signup-form" class="auth-form">
+        <input id="su-name" name="name" placeholder="Nome" aria-label="Nome" autocomplete="name" required />
+        <input id="su-email" name="email" type="email" placeholder="E-mail" aria-label="E-mail" autocomplete="email" required />
+        <input id="su-pass" name="password" type="password" placeholder="Senha" aria-label="Senha" autocomplete="new-password" required />
+        <button class="btn btn-primary" type="submit">Criar conta</button>
+      </form>
+      <div id="signup-res" class="auth-alert" role="status" aria-live="polite" hidden></div>
+      <p class="auth-switch">
+        Já tem conta? <a href="/login">Entrar</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById('signup-form') as HTMLFormElement;
+  const submit = form.querySelector('[type="submit"]') as HTMLButtonElement;
+  const result = document.getElementById('signup-res') as HTMLDivElement;
+
+  function show(message: string) {
+    result.textContent = message;
+    result.hidden = false;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    result.hidden = true;
+
+    const name = (document.getElementById('su-name') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('su-email') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('su-pass') as HTMLInputElement).value;
+
+    submit.disabled = true;
+    submit.textContent = 'Criando…';
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        show('Conta criada! Ela precisa ser aprovada por um administrador antes do primeiro acesso. Redirecionando para o login…');
+        setTimeout(() => window.location.assign('/login'), 3000);
+        return;
+      }
+
+      const messages: Record<string, string> = {
+        exists: 'Já existe uma conta com esse e-mail.',
+        'email+password required': 'Informe e-mail e senha.',
+      };
+      show(messages[data.error] || 'Não foi possível criar a conta. Tente novamente mais tarde.');
+    } catch (error) {
+      console.error('Falha ao criar conta:', error);
+      show('Não foi possível conectar ao serviço. Tente novamente mais tarde.');
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Criar conta';
+    }
+  });
+</script>
+
+<style>
+  .auth-switch {
+    margin-top: 16px;
+    color: var(--muted);
+  }
+
+  .auth-switch a {
+    color: var(--accent);
+  }
+</style>

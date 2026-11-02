@@ -1,0 +1,29 @@
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y nodejs npm
+npm init -y          # se ainda não tiver um package.json
+npm install -D @playwright/test
+npx playwright install --with-deps
+npm install -D dotenv
+touch .env
+echo ".env" >> .gitignore
+touch playwright.config.ts
+
+
+Comando para gerar código:
+npx playwright codegen
+
+comango para rodar teste:
+npx playwright test tests/negociacao.spec.ts --headed
+
+código para para a pagina e validar manualmente
+await page.pause();
+
+Dicas:
+se der warn copy é so fazer wsl --shutdown no power shell
+
+for i in {1..20}; do echo "=== Ciclo $i/20 ==="; for v in V4 V5 V6 V7; do npx playwright test tests/matricula${v}.spec.ts --workers=1; npx playwright test tests/tudo${v}.spec.ts --workers=1; done; done
+
+
+comando para rodar testes aleatórios com um aquecimento para carregar o chache:
+for w in {1..3}; do echo "=== Aquecimento $w/3 ==="; npx playwright test tests/aquecimentoV2.spec.ts; done && for i in {1..20}; do echo "=== Ciclo $i/20 ==="; npx playwright test --config=playwright.benchmark.config.ts; done
+

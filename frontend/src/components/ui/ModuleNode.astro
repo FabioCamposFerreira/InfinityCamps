@@ -1,0 +1,147 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  icon?: string;
+  number: string;
+  status?: 'locked' | 'available' | 'in-progress' | 'completed';
+  color?: string;
+  onClick?: string;
+}
+
+const {
+  title,
+  description,
+  icon,
+  number,
+  status = 'locked',
+  color = '#666',
+  onClick,
+} = Astro.props;
+
+const isClickable = status !== 'locked';
+const statusIcon = status === 'locked' ? '🔒' : '';
+const statusClass = `node-${status}`;
+---
+
+<div class={`module-node ${statusClass}`} onClick={onClick} data-clickable={isClickable}>
+  <div class="node-circle" style={`--node-color: ${color}`}>
+    {icon ? (
+      <img src={icon} alt="" class="node-icon" />
+    ) : (
+      <span class="node-number">{number}</span>
+    )}
+    {statusIcon && <span class="node-lock">{statusIcon}</span>}
+  </div>
+  <div class="node-content">
+    <h3 class="node-title">{title}</h3>
+    <p class="node-description">{description}</p>
+  </div>
+</div>
+
+<style>
+  .module-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: default;
+    transition: transform 0.2s;
+  }
+
+  .module-node[data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  .module-node[data-clickable="true"]:hover {
+    transform: translateY(-4px);
+  }
+
+  .module-node[data-clickable="true"]:hover .node-circle {
+    box-shadow: 0 0 20px var(--node-color);
+  }
+
+  .node-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--surface, #1a1a2e);
+    border: 4px solid var(--node-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .node-locked .node-circle {
+    border-color: #666;
+    opacity: 0.6;
+  }
+
+  .node-available .node-circle {
+    border-color: var(--node-color);
+  }
+
+  .node-in-progress .node-circle {
+    border-color: var(--node-color);
+    box-shadow: 0 0 15px var(--node-color);
+    animation: pulse 2s infinite;
+  }
+
+  .node-completed .node-circle {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 0 15px var(--node-color);
+    }
+    50% {
+      box-shadow: 0 0 25px var(--node-color);
+    }
+  }
+
+  .node-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+
+  .node-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--node-color);
+  }
+
+  .node-completed .node-number {
+    color: white;
+  }
+
+  .node-lock {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 20px;
+  }
+
+  .node-content {
+    text-align: center;
+    max-width: 200px;
+  }
+
+  .node-title {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink, #fff);
+  }
+
+  .node-description {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted, #aaa);
+    line-height: 1.4;
+  }
+</style>

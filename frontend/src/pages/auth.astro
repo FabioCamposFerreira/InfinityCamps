@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+---
+
+<BaseLayout title="InfinityCamps — Acesso">
+  <div class="container">
+    <AppHeader page="auth" />
+
+    <div class="auth-container">
+      <h2>Autenticação</h2>
+      <div class="auth-options">
+        <a href="/login" class="btn btn-primary">Entrar</a>
+        <a href="/signup" class="btn btn-ghost">Criar conta</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .auth-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .auth-options .btn {
+    justify-content: center;
+  }
+</style>

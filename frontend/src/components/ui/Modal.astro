@@ -1,0 +1,179 @@
+---
+interface Props {
+  id: string;
+  title?: string;
+  open?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  closeOnEscape?: boolean;
+  closeOnBackdrop?: boolean;
+}
+
+const {
+  id,
+  title,
+  open = false,
+  size = 'md',
+  closeOnEscape = true,
+  closeOnBackdrop = true,
+} = Astro.props;
+
+const sizeClass = `modal-${size}`;
+---
+
+<div id={id} class="modal" hidden={!open} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`}>
+  <div class="modal-backdrop" class:modal-backdrop-clickable={closeOnBackdrop}></div>
+  <div class={`modal-content ${sizeClass}`}>
+    {title && (
+      <div class="modal-header">
+        <h2 id={`${id}-title`} class="modal-title">{title}</h2>
+        <button
+          class="modal-close"
+          type="button"
+          aria-label="Fechar"
+          onClick={`document.getElementById('${id}').hidden = true`}
+        >
+          ×
+        </button>
+      </div>
+    )}
+    <div class="modal-body">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ id, closeOnEscape, closeOnBackdrop }}>
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  const backdrop = modal.querySelector('.modal-backdrop');
+  const closeBtn = modal.querySelector('.modal-close');
+
+  function close() {
+    modal.hidden = true;
+  }
+
+  function open() {
+    modal.hidden = false;
+  }
+
+  // Expose methods
+  (modal as any).close = close;
+  (modal as any).open = open;
+
+  // Close on escape
+  if (closeOnEscape) {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.hidden) {
+        close();
+      }
+    });
+  }
+
+  // Close on backdrop click
+  if (closeOnBackdrop && backdrop) {
+    backdrop.addEventListener('click', close);
+  }
+
+  // Close button
+  if (closeBtn) {
+    closeBtn.addEventListener('click', close);
+  }
+</script>
+
+<style>
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-backdrop-clickable {
+    cursor: pointer;
+  }
+
+  .modal-content {
+    position: relative;
+    background: var(--surface, #fff);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-sm {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .modal-md {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .modal-lg {
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .modal-xl {
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border, #e0e0e0);
+  }
+
+  .modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink, #1d3557);
+  }
+
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--muted, #666);
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+  .modal-close:hover {
+    background: var(--surface-hover, #f5f5f5);
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+  }
+</style>

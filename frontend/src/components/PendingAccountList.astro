@@ -1,0 +1,145 @@
+<div id="pending-account-list" class="pending-account-list" aria-live="polite">
+  <p class="pal-message pal-info">Carregando contas…</p>
+</div>
+
+<script>
+  interface Account {
+    name?: string;
+    email: string;
+    status: string;
+  }
+
+  const container = document.getElementById('pending-account-list') as HTMLElement;
+
+  function authHeaders(): Record<string, string> {
+    const token = localStorage.getItem('jwt') || localStorage.getItem('admin_jwt') || '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  function message(text: string, kind: 'info' | 'error') {
+    const element = document.createElement('p');
+    element.className = `pal-message pal-${kind}`;
+    element.textContent = text;
+    return element;
+  }
+
+  function accountCard(account: Account) {
+    const card = document.createElement('article');
+    card.className = 'pal-card';
+
+    const details = document.createElement('div');
+    const name = document.createElement('h3');
+    name.textContent = account.name || 'Usuário sem nome';
+    const email = document.createElement('p');
+    email.textContent = account.email;
+    details.append(name, email);
+
+    const approve = document.createElement('button');
+    approve.type = 'button';
+    approve.className = 'btn btn-primary btn-md';
+    approve.textContent = 'Aprovar';
+    approve.addEventListener('click', async () => {
+      approve.disabled = true;
+      approve.textContent = 'Aprovando…';
+      try {
+        const response = await fetch('/api/admin/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ email: account.email }),
+        });
+        if (!response.ok) throw new Error(`Approval returned ${response.status}`);
+        card.remove();
+        if (!container.querySelector('.pal-card')) {
+          container.replaceChildren(message('Não há contas aguardando aprovação.', 'info'));
+        }
+      } catch (error) {
+        console.error('Não foi possível aprovar a conta:', error);
+        approve.disabled = false;
+        approve.textContent = 'Tentar novamente';
+      }
+    });
+
+    card.append(details, approve);
+    return card;
+  }
+
+  async function loadAccounts() {
+    try {
+      const response = await fetch('/api/admin/accounts', { headers: authHeaders(), cache: 'no-store' });
+
+      if (response.status === 401 || response.status === 403) {
+        container.replaceChildren(message('Seu acesso não permite administrar as contas.', 'error'));
+        return;
+      }
+      if (!response.ok) {
+        container.replaceChildren(message('Não foi possível carregar as contas.', 'error'));
+        return;
+      }
+
+      const data = await response.json();
+      const pending: Account[] = Array.isArray(data.accounts)
+        ? data.accounts.filter((account: Account) => account.status === 'pending')
+        : [];
+
+      container.replaceChildren(
+        ...(pending.length ? pending.map(accountCard) : [message('Não há contas aguardando aprovação.', 'info')]),
+      );
+    } catch (error) {
+      console.error('Não foi possível carregar as contas pendentes:', error);
+      container.replaceChildren(message('Não foi possível conectar ao serviço. Tente novamente mais tarde.', 'error'));
+    }
+  }
+
+  loadAccounts();
+</script>
+
+<style is:global>
+  #pending-account-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  #pending-account-list .pal-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: 8px;
+    background: var(--surface, #fff);
+  }
+
+  #pending-account-list .pal-card h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink, #1d3557);
+  }
+
+  #pending-account-list .pal-card p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted, #666);
+  }
+
+  #pending-account-list .pal-message {
+    margin: 0;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  #pending-account-list .pal-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+  }
+
+  #pending-account-list .pal-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+</style>

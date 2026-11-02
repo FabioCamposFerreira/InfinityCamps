@@ -1,0 +1,118 @@
+---
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items?: BreadcrumbItem[];
+  ariaLabel?: string;
+}
+
+const {
+  items: initialItems = [],
+  ariaLabel = 'Navegação estrutural',
+} = Astro.props;
+---
+
+<nav id="breadcrumb" aria-label={ariaLabel}>
+  <ol id="breadcrumb-list">
+    {initialItems.map((item, index) => (
+      <li>
+        {index > 0 && <span aria-hidden="true">›</span>}
+        {item.href && index < initialItems.length - 1 ? (
+          <a href={item.href}>{item.label}</a>
+        ) : (
+          <span aria-current={index === initialItems.length - 1 ? 'page' : undefined}>
+            {item.label}
+          </span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<script>
+  interface BreadcrumbItem {
+    label: string;
+    href?: string;
+  }
+
+  // Expose method to update items dynamically
+  const breadcrumb = document.getElementById('breadcrumb');
+  if (breadcrumb) {
+    (breadcrumb as any).setItems = (items: BreadcrumbItem[]) => {
+      const list = document.getElementById('breadcrumb-list');
+      if (!list) return;
+
+      list.innerHTML = '';
+      items.forEach((item, index) => {
+        const li = document.createElement('li');
+        
+        if (index > 0) {
+          const separator = document.createElement('span');
+          separator.setAttribute('aria-hidden', 'true');
+          separator.textContent = '›';
+          li.appendChild(separator);
+        }
+
+        if (item.href && index < items.length - 1) {
+          const link = document.createElement('a');
+          link.href = item.href;
+          link.textContent = item.label;
+          li.appendChild(link);
+        } else {
+          const current = document.createElement('span');
+          current.textContent = item.label;
+          if (index === items.length - 1) {
+            current.setAttribute('aria-current', 'page');
+          }
+          li.appendChild(current);
+        }
+
+        list.appendChild(li);
+      });
+    };
+  }
+</script>
+
+<style>
+  #breadcrumb {
+    display: block;
+    margin: 0 0 18px;
+    color: var(--muted, #526988);
+    font: 13px/1.5 Arial, Helvetica, sans-serif;
+  }
+
+  #breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Os itens podem ser criados pelo setItems() em runtime; por isso :global().
+     Estilos com escopo do Astro não alcançam nós criados pelo JavaScript. */
+  #breadcrumb-list :global(li) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  #breadcrumb-list :global(a) {
+    color: var(--ink, #1d3557);
+    text-decoration: none;
+  }
+
+  #breadcrumb-list :global(a:hover) {
+    text-decoration: underline;
+  }
+
+  #breadcrumb-list :global([aria-current="page"]) {
+    color: var(--muted, #526988);
+  }
+</style>

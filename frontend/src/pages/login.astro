@@ -1,0 +1,168 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+---
+
+<BaseLayout title="InfinityCamps — Entrar">
+  <div class="container">
+    <AppHeader page="login" />
+
+    <div class="auth-container">
+      <h2>Entrar</h2>
+      <form id="login-form" class="auth-form" novalidate>
+        <div class="input-validation" data-input-validation>
+          <input id="li-email" name="email" type="email" placeholder="E-mail" aria-label="E-mail" autocomplete="username" />
+          <span class="input-error-icon" aria-hidden="true">!</span>
+        </div>
+        <div class="password-field input-validation" data-input-validation>
+          <input id="li-pass" name="password" type="password" placeholder="Senha" aria-label="Senha" autocomplete="current-password" />
+          <span class="input-error-icon" aria-hidden="true">!</span>
+          <button class="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false" aria-controls="li-pass">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>
+          </button>
+        </div>
+        <button class="btn btn-primary" type="submit">Entrar</button>
+      </form>
+      <div id="login-res" class="auth-alert" role="alert" aria-live="polite" hidden></div>
+      <p class="auth-switch">
+        Não tem conta? <a href="/signup">Criar conta</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const loginForm = document.getElementById('login-form') as HTMLFormElement;
+  const loginButton = loginForm.querySelector('[type="submit"]') as HTMLButtonElement;
+  const emailInput = document.getElementById('li-email') as HTMLInputElement;
+  const passwordInput = document.getElementById('li-pass') as HTMLInputElement;
+  const passwordToggle = document.querySelector('.password-toggle') as HTMLButtonElement;
+  const alertBox = document.getElementById('login-res') as HTMLDivElement;
+
+  function setInputError(input: HTMLInputElement, message = '') {
+    const wrapper = input.closest('[data-input-validation]');
+    const hasError = Boolean(message);
+    wrapper?.classList.toggle('has-error', hasError);
+    input.setAttribute('aria-invalid', String(hasError));
+    if (hasError) input.setAttribute('title', message);
+    else input.removeAttribute('title');
+  }
+
+  function showAlert(message: string) {
+    alertBox.textContent = message;
+    alertBox.hidden = false;
+  }
+
+  function clearAlert() {
+    alertBox.textContent = '';
+    alertBox.hidden = true;
+  }
+
+  // Só aceita voltar para conteúdo do curso, página do curso ou administração; o resto cai na home.
+  function resolveReturnPath(value: string | null) {
+    if (!value) return '/';
+    try {
+      let decoded = value;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const next = decodeURIComponent(decoded);
+          if (next === decoded) break;
+          decoded = next;
+        } catch {
+          break;
+        }
+      }
+      const destination = new URL(decoded, window.location.origin);
+      if (destination.origin !== window.location.origin) return '/';
+      // Evita voltar para as próprias telas de autenticação (laço de login).
+      if (['/login', '/signup', '/auth'].includes(destination.pathname)) return '/';
+      return `${destination.pathname}${destination.search}${destination.hash}`;
+    } catch (error) {
+      console.warn('Destino de retorno inválido:', error);
+      return '/';
+    }
+  }
+
+  [emailInput, passwordInput].forEach((input) => {
+    input.addEventListener('input', () => setInputError(input));
+  });
+
+  passwordToggle.addEventListener('click', () => {
+    const showPassword = passwordInput.type === 'password';
+    passwordInput.type = showPassword ? 'text' : 'password';
+    passwordToggle.setAttribute('aria-label', showPassword ? 'Ocultar senha' : 'Mostrar senha');
+    passwordToggle.setAttribute('aria-pressed', String(showPassword));
+  });
+
+  loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearAlert();
+    setInputError(emailInput);
+    setInputError(passwordInput);
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const emailValid = Boolean(email) && emailInput.checkValidity();
+
+    if (!email) setInputError(emailInput, 'Preencha o e-mail.');
+    else if (!emailValid) setInputError(emailInput, 'Informe um e-mail válido.');
+    if (!password) setInputError(passwordInput, 'Preencha a senha.');
+    if (!emailValid || !password) {
+      (emailValid ? passwordInput : emailInput).focus();
+      return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.textContent = 'Entrando…';
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      let result: { token?: string; status?: string; error?: string } = {};
+      try {
+        result = JSON.parse(await response.text());
+      } catch (error) {
+        console.error('Resposta de login inválida:', error);
+      }
+
+      if (response.ok && result.token) {
+        localStorage.setItem('jwt', result.token);
+        document.cookie = `infinity_session=${encodeURIComponent(result.token)}; Path=/; Max-Age=604800; SameSite=Lax`;
+        const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+        window.location.replace(resolveReturnPath(returnTo));
+        return;
+      }
+
+      const messages: Record<string, string> = {
+        invalid_credentials: 'E-mail ou senha incorretos. Confira os dados e tente novamente.',
+        not_found: 'Não encontramos uma conta com esse e-mail.',
+        pending: 'Sua conta ainda está aguardando aprovação.',
+        rejected: 'Esta conta não tem acesso. Entre em contato com o suporte.',
+      };
+      const reason = result.status || result.error || '';
+      showAlert(messages[reason] || 'Não foi possível entrar. Tente novamente mais tarde.');
+      console.warn('Falha no login:', { status: response.status, error: reason || 'unknown' });
+    } catch (error) {
+      console.error('Falha na solicitação de login:', error);
+      showAlert('Não foi possível conectar ao serviço. Tente novamente mais tarde.');
+    } finally {
+      loginButton.disabled = false;
+      loginButton.textContent = 'Entrar';
+    }
+  });
+</script>
+
+<style>
+  .auth-switch {
+    margin-top: 16px;
+    color: var(--muted);
+  }
+
+  .auth-switch a {
+    color: var(--accent);
+  }
+</style>

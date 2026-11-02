@@ -1,0 +1,348 @@
+---
+import Button from './ui/Button.astro';
+
+interface Props {
+  page?: string;
+}
+
+const { page = 'catalog' } = Astro.props;
+const isAuthPage = ['login', 'signup', 'auth'].includes(page);
+---
+
+<div id="app-header">
+  <div class="header">
+    <h1>InfinityCamps</h1>
+    <nav class="nav">
+      <div class="theme-control">
+        <button
+          class="theme-trigger"
+          type="button"
+          aria-label="Abrir opções de tema"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="theme-popup"
+        >
+          <svg class="theme-trigger-icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>
+          </svg>
+          <svg class="theme-trigger-icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"/>
+          </svg>
+          <svg class="theme-trigger-icon icon-gray" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5"/>
+            <path d="M12 3.5v17"/>
+          </svg>
+        </button>
+        <div class="theme-popup" id="theme-popup" role="menu" aria-label="Preferência de tema" hidden>
+          <button type="button" class="theme-option" role="menuitemradio" data-theme-choice="system">
+            Automático <span>Do sistema</span>
+          </button>
+          <button type="button" class="theme-option" role="menuitemradio" data-theme-choice="light">
+            Claro
+          </button>
+          <button type="button" class="theme-option" role="menuitemradio" data-theme-choice="dark">
+            Escuro
+          </button>
+          <button type="button" class="theme-option" role="menuitemradio" data-theme-choice="gray">
+            Cinza
+          </button>
+        </div>
+      </div>
+      <a class="header-admin-link" href="/admin" hidden>Administração</a>
+      <span class="header-username" hidden></span>
+      <Button
+        class="header-logout"
+        type="button"
+        variant="ghost"
+        size="sm"
+        hidden
+      >
+        Sair
+      </Button>
+      <a
+        class="header-anonymous-action"
+        href={isAuthPage ? '/' : '/login'}
+        hidden={!isAuthPage}
+      >
+        <Button variant="primary" size="sm">
+          {isAuthPage ? 'Voltar' : 'Login'}
+        </Button>
+      </a>
+    </nav>
+  </div>
+</div>
+
+<script>
+  function updateSession() {
+    let account = null;
+    try {
+      const token = localStorage.getItem('jwt');
+      if (token) {
+        const payload = token.split('.')[1];
+        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const claims = JSON.parse(decodeURIComponent(escape(atob(normalized))));
+        if (claims.status === 'approved' && (!claims.exp || claims.exp > Date.now() / 1000)) {
+          account = claims;
+        }
+      }
+    } catch (error) {
+      console.warn('Não foi possível ler a sessão atual:', error);
+    }
+
+    const username = document.querySelector('.header-username');
+    const logout = document.querySelector('.header-logout');
+    const adminLink = document.querySelector('.header-admin-link');
+    const anonymousLink = document.querySelector('.header-anonymous-action');
+
+    if (account) {
+      if (username) {
+        username.textContent = account.name || account.email?.split('@')[0] || 'Usuário';
+        username.hidden = false;
+      }
+      if (logout) logout.hidden = false;
+      if (adminLink) adminLink.hidden = account.role !== 'admin';
+      if (anonymousLink) anonymousLink.hidden = true;
+    } else {
+      if (username) username.hidden = true;
+      if (logout) logout.hidden = true;
+      if (adminLink) adminLink.hidden = true;
+      if (anonymousLink) anonymousLink.hidden = false;
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('jwt');
+    document.cookie = 'infinity_session=; Path=/; Max-Age=0; SameSite=Lax';
+    window.location.assign('/');
+  }
+
+  function applyTheme(savedChoice: string | null) {
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const theme = savedChoice || (systemTheme.matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+
+    const trigger = document.querySelector('.theme-trigger') as HTMLElement;
+    const options = document.querySelectorAll('[data-theme-choice]');
+
+    if (trigger) {
+      trigger.dataset.theme = theme;
+      trigger.setAttribute('aria-label', `Tema ${theme === 'light' ? 'claro' : theme === 'dark' ? 'escuro' : 'cinza'}. Abrir opções de tema`);
+    }
+
+    options.forEach(option => {
+      option.setAttribute('aria-checked', String(option.dataset.themeChoice === (savedChoice || 'system')));
+    });
+  }
+
+  function closePopup() {
+    const popup = document.getElementById('theme-popup');
+    const trigger = document.querySelector('.theme-trigger') as HTMLElement;
+    if (popup) popup.hidden = true;
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function initTheme() {
+    const themeKey = 'theme';
+    const choiceKey = 'theme-user-choice';
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    let savedChoice = localStorage.getItem(choiceKey) === 'true' 
+      ? localStorage.getItem(themeKey) 
+      : null;
+    
+    if (!['light', 'dark', 'gray'].includes(savedChoice || '')) {
+      savedChoice = null;
+      localStorage.removeItem(themeKey);
+      localStorage.removeItem(choiceKey);
+    }
+
+    const trigger = document.querySelector('.theme-trigger');
+    const popup = document.getElementById('theme-popup');
+    const options = document.querySelectorAll('[data-theme-choice]');
+
+    applyTheme(savedChoice);
+
+    if (trigger) {
+      trigger.addEventListener('click', () => {
+        if (popup) {
+          popup.hidden = !popup.hidden;
+          trigger.setAttribute('aria-expanded', String(!popup.hidden));
+        }
+      });
+    }
+
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        const choice = option.dataset.themeChoice;
+        if (choice === 'system') {
+          savedChoice = null;
+          localStorage.removeItem(themeKey);
+          localStorage.removeItem(choiceKey);
+        } else {
+          savedChoice = choice;
+          localStorage.setItem(themeKey, choice);
+          localStorage.setItem(choiceKey, 'true');
+        }
+        applyTheme(savedChoice);
+        closePopup();
+        if (trigger) trigger.focus();
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      const themeControl = document.querySelector('.theme-control');
+      if (themeControl && !themeControl.contains(event.target as Node)) {
+        closePopup();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closePopup();
+        if (trigger) trigger.focus();
+      }
+    });
+
+    systemTheme.addEventListener('change', () => {
+      if (!savedChoice) applyTheme(null);
+    });
+  }
+
+  // Initialize
+  const logout = document.querySelector('.header-logout');
+  if (logout) {
+    logout.addEventListener('click', handleLogout);
+  }
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'jwt') updateSession();
+  });
+
+  updateSession();
+  initTheme();
+</script>
+
+<style>
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border, #e0e0e0);
+    background: var(--surface, #fff);
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink, #1d3557);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .theme-control {
+    position: relative;
+  }
+
+  .theme-trigger {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink, #1d3557);
+    transition: background-color 0.2s;
+  }
+
+  .theme-trigger:hover {
+    background-color: var(--surface-hover, #f5f5f5);
+  }
+
+  .theme-trigger-icon {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .theme-trigger[data-theme="light"] .icon-sun,
+  .theme-trigger[data-theme="dark"] .icon-moon,
+  .theme-trigger[data-theme="gray"] .icon-gray {
+    opacity: 1;
+  }
+
+  .theme-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 160px;
+    padding: 8px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  .theme-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--ink, #1d3557);
+    text-align: left;
+    transition: background-color 0.2s;
+  }
+
+  .theme-option:hover {
+    background-color: var(--surface-hover, #f5f5f5);
+  }
+
+  .theme-option span {
+    font-size: 12px;
+    color: var(--muted, #666);
+  }
+
+  .header-username {
+    font-size: 14px;
+    color: var(--ink, #1d3557);
+  }
+
+  .header-logout {
+    font-size: 14px;
+  }
+
+  .header-admin-link {
+    font-size: 14px;
+    color: var(--ink, #1d3557);
+    text-decoration: none;
+  }
+
+  .header-admin-link:hover {
+    text-decoration: underline;
+  }
+
+  .header-anonymous-action {
+    text-decoration: none;
+  }
+</style>

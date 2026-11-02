@@ -1,0 +1,331 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = 'Capítulos' } = Astro.props;
+---
+
+<button
+  id="chapter-sidebar-toggle"
+  class="chapter-sidebar-toggle"
+  type="button"
+  aria-expanded="false"
+  aria-controls="chapter-sidebar"
+>
+  <span class="chapter-sidebar-toggle-icon" aria-hidden="true">☰</span>
+  <span>Capítulos</span>
+</button>
+
+<aside id="chapter-sidebar" class="chapter-sidebar" aria-label="Capítulos do módulo">
+  <div class="chapter-sidebar-head">
+    <p class="chapter-sidebar-kicker">Módulo</p>
+    <h2 id="chapter-sidebar-title" class="chapter-sidebar-title">{title}</h2>
+    <div class="chapter-progress">
+      <div class="chapter-progress-track" role="presentation">
+        <span id="chapter-progress-fill" class="chapter-progress-fill"></span>
+      </div>
+      <p id="chapter-progress-label" class="chapter-progress-label">0 de 0 concluídos</p>
+    </div>
+  </div>
+
+  <nav class="chapter-sidebar-nav" aria-label="Lista de capítulos">
+    <ol id="chapter-list" class="chapter-list"></ol>
+  </nav>
+</aside>
+
+<script>
+  const toggle = document.getElementById('chapter-sidebar-toggle');
+  const sidebar = document.getElementById('chapter-sidebar');
+
+  function setOpen(open: boolean) {
+    if (!sidebar || !toggle) return;
+    sidebar.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+
+  toggle?.addEventListener('click', () => {
+    setOpen(!sidebar?.classList.contains('is-open'));
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!sidebar?.classList.contains('is-open')) return;
+    const target = event.target as Node;
+    if (sidebar.contains(target) || toggle?.contains(target)) return;
+    setOpen(false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (!sidebar?.classList.contains('is-open')) return;
+    setOpen(false);
+    toggle?.focus();
+  });
+</script>
+
+<style>
+  /* Trilho encostado na esquerda: sem margem, sem cantos, altura da tela. */
+  .chapter-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100vh;
+    padding: 18px 16px;
+    background: var(--surface, #1e293b);
+    border-right: 1px solid var(--card-border, #334155);
+    overflow-y: auto;
+  }
+
+  .chapter-sidebar-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chapter-sidebar-kicker {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted, #94a3b8);
+  }
+
+  .chapter-sidebar-title {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.35;
+    color: var(--text, #f1f5f9);
+  }
+
+  .chapter-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .chapter-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--card-border, #334155);
+    overflow: hidden;
+  }
+
+  .chapter-progress-fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent, #3b82f6);
+    transition: width 0.3s ease;
+  }
+
+  .chapter-progress-label {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted, #94a3b8);
+  }
+
+  .chapter-sidebar-nav {
+    min-height: 0;
+  }
+
+  .chapter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Os itens abaixo são criados pelo JavaScript da página, por isso :global()
+     — estilos com escopo do Astro não alcançam nós criados em runtime. */
+  :global(.chapter-link) {
+    display: grid;
+    grid-template-columns: 18px 28px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--text, #f1f5f9);
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  :global(.chapter-link:hover) {
+    background: var(--nav-bg, #334155);
+  }
+
+  :global(.chapter-link:focus-visible) {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 1px;
+  }
+
+  :global(.chapter-status) {
+    font-size: 12px;
+    text-align: center;
+    color: var(--muted, #94a3b8);
+  }
+
+  :global(.chapter-number) {
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: var(--muted, #94a3b8);
+  }
+
+  :global(.chapter-label) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  :global(.is-current > .chapter-link) {
+    background: var(--nav-bg, #334155);
+    box-shadow: inset 3px 0 0 var(--accent, #3b82f6);
+  }
+
+  :global(.is-current .chapter-label) {
+    font-weight: 600;
+  }
+
+  :global(.is-current .chapter-status) {
+    color: var(--accent, #3b82f6);
+  }
+
+  :global(.is-completed .chapter-status) {
+    color: #22c55e;
+  }
+
+  :global(.is-locked > .chapter-link) {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* Seções do capítulo (títulos do conteúdo), aninhadas sob ele. */
+  :global(.chapter-subsections) {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 2px 0 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  :global(.chapter-subsection) {
+    display: block;
+    padding: 3px 8px 3px 44px;
+    border-radius: 4px;
+    color: var(--muted, #94a3b8);
+    font-size: 12.5px;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  :global(.chapter-subsection[data-level='3']) {
+    padding-left: 58px;
+  }
+
+  :global(.chapter-subsection[data-level='4']) {
+    padding-left: 70px;
+  }
+
+  :global(.chapter-subsection:hover) {
+    background: var(--nav-bg, #334155);
+    color: var(--text, #f1f5f9);
+  }
+
+  :global(.chapter-subsection.is-active) {
+    background: var(--nav-bg, #334155);
+    color: var(--accent, #3b82f6);
+  }
+
+  :global(.chapter-subsection:focus-visible) {
+    outline: 2px solid var(--accent, #3b82f6);
+    outline-offset: 1px;
+  }
+
+  .chapter-sidebar-toggle {
+    display: none;
+  }
+
+  /* Trilho compacto no desktop: 72px, expande ao passar o mouse. */
+  @media (min-width: 961px) {
+    .chapter-sidebar {
+      width: 72px;
+      padding: 12px 8px;
+      overflow-x: hidden;
+      transition: width 0.18s ease, padding 0.18s ease;
+      z-index: 50;
+    }
+
+    .chapter-sidebar:hover,
+    .chapter-sidebar:focus-within {
+      width: 300px;
+      padding: 18px 16px;
+      box-shadow: 12px 0 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .chapter-sidebar:not(:hover):not(:focus-within) .chapter-sidebar-head,
+    .chapter-sidebar:not(:hover):not(:focus-within) :global(.chapter-label),
+    .chapter-sidebar:not(:hover):not(:focus-within) :global(.chapter-subsections) {
+      display: none;
+    }
+
+    .chapter-sidebar:not(:hover):not(:focus-within) :global(.chapter-link) {
+      grid-template-columns: 18px minmax(0, 1fr);
+      padding: 8px 2px;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .chapter-sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 60;
+      width: min(84vw, 320px);
+      height: auto;
+      max-height: none;
+      border-radius: 0;
+      border-left: none;
+      transform: translateX(-102%);
+      transition: transform 0.25s ease;
+    }
+
+    .chapter-sidebar.is-open {
+      transform: none;
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);
+    }
+
+    .chapter-sidebar-toggle {
+      position: static;
+      display: inline-flex;
+      align-items: center;
+      justify-self: start;
+      gap: 6px;
+      margin: 4px 0 12px;
+      padding: 8px 14px;
+      border: 1px solid var(--card-border, #334155);
+      border-radius: 999px;
+      background: var(--surface, #1e293b);
+      color: var(--text, #f1f5f9);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .chapter-sidebar-toggle-icon {
+      font-size: 14px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chapter-sidebar {
+      transition: none;
+    }
+  }
+</style>

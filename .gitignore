@@ -1,0 +1,11 @@
+dev.db
+.wrangler-config/.wrangler/logs
+dsh-standard-full
+frontend/dist
+node_modules
+Insumos
+playwright-report
+test-results
+scripts
+tests
+workers

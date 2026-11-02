@@ -1,0 +1,476 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+import Breadcrumb from '../components/ui/Breadcrumb.astro';
+import { getCourses } from '../lib/server/learn.js';
+
+export async function getStaticPaths() {
+  return (await getCourses()).map((course) => ({ params: { course: course.slug } }));
+}
+---
+
+<BaseLayout title="Curso — InfinityCamps" bodyClass="course-detail-page">
+  <AppHeader page="course" />
+  <main class="course-detail-main" data-course={Astro.params.course}>
+    <div id="course-error" class="course-feedback" role="status" hidden></div>
+    
+    <div id="course-loading">
+      <p>Carregando curso...</p>
+    </div>
+
+    <div id="course-content" hidden>
+      <Breadcrumb />
+      
+      <section class="course-overview" aria-labelledby="course-title">
+        <div class="course-overview-copy">
+          <div class="course-emblem" aria-hidden="true">✦</div>
+          <h1 id="course-title">Carregando curso…</h1>
+          <div class="course-meta" id="course-meta"></div>
+          <p id="course-description" class="course-description"></p>
+        </div>
+        <aside class="course-summary" aria-label="Resumo do curso">
+          <div class="course-summary-mark" aria-hidden="true">↗</div>
+          <strong id="module-count">Módulos</strong>
+          <span>Conteúdo organizado por etapa</span>
+        </aside>
+      </section>
+
+      <section class="module-section" aria-label="Módulos do curso">
+        <div id="module-list-container"></div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+    const courseTitle = document.getElementById('course-title');
+    const courseDescription = document.getElementById('course-description');
+    const courseMeta = document.getElementById('course-meta');
+    const moduleCount = document.getElementById('module-count');
+    const moduleListContainer = document.getElementById('module-list-container');
+    const errorMessage = document.getElementById('course-error');
+    const courseLoading = document.getElementById('course-loading');
+    const courseContent = document.getElementById('course-content');
+    const breadcrumbNav = document.getElementById('breadcrumb');
+
+    function showCourseError(message) {
+      errorMessage.textContent = message;
+      errorMessage.hidden = false;
+      courseLoading.hidden = true;
+      courseContent.hidden = true;
+      courseTitle.textContent = 'Curso indisponível';
+    }
+
+    function redirectToLogin() {
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      window.location.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
+
+    async function loadCourse() {
+      const slug = document.querySelector('[data-course]')?.dataset.course || '';
+      if (!slug || slug.includes('/') || slug.includes('\\')) {
+        showCourseError('Não foi possível abrir este curso.');
+        return;
+      }
+
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        redirectToLogin();
+        return;
+      }
+
+      try {
+        const authResponse = await fetch('/api/auth/status', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+        });
+        const session = authResponse.ok ? await authResponse.json() : null;
+        if (session?.status !== 'approved') {
+          localStorage.removeItem('jwt');
+          document.cookie = 'infinity_session=; Path=/; Max-Age=0; SameSite=Lax';
+          redirectToLogin();
+          return;
+        }
+
+        const response = await fetch(`/api/courses/${encodeURIComponent(slug)}/subcourses.json`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Course details returned ${response.status}`);
+        const result = await response.json();
+
+        courseTitle.textContent = result.course.title;
+        courseDescription.textContent = result.course.description;
+        document.title = `${result.course.title} — InfinityCamps`;
+        
+        if (result.course.image) {
+          const emblem = document.querySelector('.course-emblem');
+          const image = document.createElement('img');
+          image.src = result.course.image;
+          image.alt = '';
+          emblem.replaceChildren(image);
+        }
+
+        const count = result.subcourses.length;
+        moduleCount.textContent = `${count} ${count === 1 ? 'módulo' : 'módulos'}`;
+        courseMeta.textContent = `${count} ${count === 1 ? 'etapa' : 'etapas'}`;
+
+        // Set breadcrumbs
+        if (breadcrumbNav) {
+          breadcrumbNav.setItems([
+            { label: 'Home', href: '/' },
+            { label: result.course.title }
+          ]);
+        }
+
+        const isAdmin = session?.user?.role === 'admin' || session?.payload?.role === 'admin';
+
+        // Convert subcourses to modules format for ModuleMap
+        const modules = result.subcourses.map((subcourse, index) => ({
+          id: subcourse.id || `module-${index}`,
+          title: subcourse.title,
+          description: subcourse.description,
+          number: subcourse.number || (index + 1).toString(),
+          // Admin nunca tem módulos bloqueados; aluno segue a regra do index === 0.
+          status: isAdmin || index === 0 ? 'available' : 'locked',
+          color: getModuleColor(index),
+          // Abre a página de capítulo do módulo; o link cru do manifesto é o fallback.
+          link: subcourse.chapterLink || subcourse.link || '#'
+        }));
+
+        // Calculate overall progress
+        const completedCount = modules.filter(m => m.status === 'completed').length;
+        const overallProgress = (completedCount / modules.length) * 100;
+
+        // Create ModuleMap component
+        const moduleMapHTML = `
+          <div class="module-map-wrapper">
+            <div class="module-map">
+              <div class="progress-header">
+                <div class="progress-track">
+                  <div class="track-fill" style="width: ${overallProgress}%"></div>
+                </div>
+                <div class="progress-train" style="left: ${overallProgress}%">
+                  <span class="train-icon">🚂</span>
+                </div>
+              </div>
+              <div class="modules-container">
+                ${modules.map((module, index) => `
+                  <div class="module-item">
+                    ${index > 0 ? `<div class="track-line"><div class="track-fill" style="width: ${module.status === 'completed' ? '100%' : '0%'}"></div></div>` : ''}
+                    <div class="module-node node-${module.status}" data-clickable="${module.status !== 'locked'}" onclick="${module.status !== 'locked' ? `window.location.href='${module.link}'` : ''}" style="--node-color: ${module.color}">
+                      <div class="node-circle">
+                        <span class="node-number">${module.number}</span>
+                        ${module.status === 'locked' ? '<span class="node-lock">🔒</span>' : ''}
+                      </div>
+                      <div class="node-content">
+                        <h3 class="node-title">${module.title}</h3>
+                        <p class="node-description">${module.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+
+        moduleListContainer.innerHTML = moduleMapHTML;
+
+        courseLoading.hidden = true;
+        courseContent.hidden = false;
+      } catch (error) {
+        console.error('Não foi possível carregar os módulos:', error);
+        showCourseError('Não foi possível carregar os módulos. Tente novamente mais tarde.');
+      }
+    }
+
+    function getModuleColor(index) {
+      const colors = ['#00d4ff', '#ffd700', '#ff6b6b', '#4ecdc4', '#a55eea'];
+      return colors[index % colors.length];
+    }
+
+    loadCourse();
+  </script>
+
+  <style is:global>
+    .course-detail-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .course-feedback {
+      padding: 16px;
+      background: #f8d7da;
+      color: #721c24;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+
+    .course-overview {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 32px;
+      margin-bottom: 48px;
+      padding: 32px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 16px;
+      color: white;
+    }
+
+    .course-overview-copy {
+      flex: 1;
+    }
+
+    .course-emblem {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .course-emblem img {
+      width: 64px;
+      height: 64px;
+    }
+
+    #course-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+    }
+
+    .course-meta {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+
+    .course-description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #ccc;
+      margin: 0;
+    }
+
+    .course-summary {
+      text-align: center;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      min-width: 200px;
+    }
+
+    .course-summary-mark {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .course-summary strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .course-summary span {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .module-section {
+      margin-top: 32px;
+    }
+
+    .module-map-wrapper {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 16px;
+      padding: 40px 20px;
+    }
+
+    .module-map {
+      position: relative;
+    }
+
+    .progress-header {
+      position: relative;
+      margin-bottom: 60px;
+      padding: 0 40px;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .track-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: #00d4ff;
+      border-radius: 4px;
+      transition: width 0.5s ease-out;
+      box-shadow: 0 0 10px #00d4ff;
+    }
+
+    .progress-train {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: left 0.5s ease-out;
+    }
+
+    .train-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8));
+    }
+
+    .modules-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .module-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .track-line {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      position: relative;
+    }
+
+    .track-line .track-fill {
+      height: 100%;
+      background: #666;
+      border-radius: 2px;
+      transition: width 0.5s ease-out;
+    }
+
+    .module-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      cursor: default;
+      transition: transform 0.2s;
+    }
+
+    .module-node[data-clickable="true"] {
+      cursor: pointer;
+    }
+
+    .module-node[data-clickable="true"]:hover {
+      transform: translateY(-4px);
+    }
+
+    .module-node[data-clickable="true"]:hover .node-circle {
+      box-shadow: 0 0 20px var(--node-color);
+    }
+
+    .node-circle {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #1a1a2e;
+      border: 4px solid var(--node-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .node-locked .node-circle {
+      border-color: #666;
+      opacity: 0.6;
+    }
+
+    .node-available .node-circle {
+      border-color: var(--node-color);
+    }
+
+    .node-in-progress .node-circle {
+      border-color: var(--node-color);
+      box-shadow: 0 0 15px var(--node-color);
+      animation: pulse 2s infinite;
+    }
+
+    .node-completed .node-circle {
+      border-color: #28a745;
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 15px var(--node-color);
+      }
+      50% {
+        box-shadow: 0 0 25px var(--node-color);
+      }
+    }
+
+    .node-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--node-color);
+    }
+
+    .node-completed .node-number {
+      color: white;
+    }
+
+    .node-lock {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      font-size: 20px;
+    }
+
+    .node-content {
+      text-align: center;
+      max-width: 200px;
+    }
+
+    .node-title {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .node-description {
+      margin: 0;
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+      .course-overview {
+        flex-direction: column;
+      }
+
+      .modules-container {
+        flex-direction: column;
+      }
+
+      .module-item {
+        flex-direction: column;
+      }
+
+      .track-line {
+        width: 4px;
+        height: 40px;
+        flex: none;
+      }
+    }
+  </style>

@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppHeader from '../components/AppHeader.astro';
+---
+
+<BaseLayout title="InfinityCamps — Catálogo">
+  <AppHeader page="catalog" />
+
+  <div class="container">
+    <div id="catalog" aria-live="polite"></div>
+    <p id="catalog-error" class="catalog-message" hidden>Não foi possível carregar os cursos. Tente novamente mais tarde.</p>
+  </div>
+</BaseLayout>
+
+<script>
+    const catalog = document.querySelector('#catalog')
+    const errorMessage = document.querySelector('#catalog-error')
+
+    function makeCourseCard(course) {
+      const card = document.createElement('article')
+      card.className = 'course-card course-card-dynamic'
+      card.tabIndex = 0
+      card.setAttribute('role', 'link')
+      card.setAttribute('aria-label', `Abrir curso ${course.title}`)
+
+      const image = document.createElement('img')
+      image.className = 'course-cover'
+      image.src = course.image
+      image.alt = course.title
+      image.loading = 'lazy'
+
+      const content = document.createElement('div')
+      content.className = 'course-card-content'
+      const title = document.createElement('h3')
+      title.textContent = course.title
+      const description = document.createElement('p')
+      description.textContent = course.description
+      content.append(title, description)
+
+      const access = document.createElement('span')
+      access.className = `course-access ${course.requiresLogin ? 'is-locked' : 'is-open'}`
+      access.textContent = course.requiresLogin ? 'Login necessário' : 'Aberto'
+
+      const openCourse = () => {
+        const destination = course.catalogLink || course.link
+        if (course.requiresLogin && !localStorage.getItem('jwt')) {
+          window.location.href = `/login?returnTo=${encodeURIComponent(destination)}`
+          return
+        }
+        window.location.href = destination
+      }
+      card.addEventListener('click', openCourse)
+      card.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          openCourse()
+        }
+      })
+
+      card.append(image, content, access)
+      return card
+    }
+
+    async function loadCourses() {
+      try {
+        const response = await fetch('/api/courses.json', { cache: 'no-store' })
+        if (!response.ok) throw new Error(`Course catalog returned ${response.status}`)
+        const data = await response.json()
+        const courses = Array.isArray(data.courses) ? data.courses : []
+        catalog.replaceChildren(...courses.map(makeCourseCard))
+      } catch (error) {
+        console.error('Could not load course catalog:', error)
+        errorMessage.hidden = false
+      }
+    }
+
+    loadCourses()
+</script>
