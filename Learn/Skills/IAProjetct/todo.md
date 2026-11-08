@@ -1,0 +1,3 @@
+-pedir para a ia corrigir ortigrafia, ingles e MD de acordo com o padrão  destas linguaens, sem mudar o conteudo
+-criar scripts cmd
+-analisar incoerencias das regras

@@ -14,6 +14,9 @@
 - Quando sugerir componentes ou libs, explique por que a exceção é necessária (ex.: `idb` para IndexedDB). Sempre prefira soluções nativas e leves.
 - Sempre sugerir usar libs quando elas paresentam uma solução mais leve/rápida, ou simplifique o codigo
 - comentario no inicio de todo arquivo salando qual é sua função
+- Todos os arquivos de codigo tem que ter um comentario de cabeçalho com informações, funcção principal do código, onde é usado chama. etc...
+- Todas as funções tem que ter comentarios de função com tipos de parametro de entrar, saida e função de acordo com o padrão da linguagem
+- Proibido criar arquivos .exemple
 
 ## Intercefe
 - Não mostrar para o usuario nomes de caminhos, variaveis ids, textos técnicos ou instruções internas que o usuário final não precisa ver, como caminhos de arquivos, nomes de manifestos, detalhes de servidor, mensagens de depuração ou stack traces.

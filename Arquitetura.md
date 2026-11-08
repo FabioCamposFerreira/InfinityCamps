@@ -86,3 +86,13 @@ regras do projeto e o que não fazer mais
 - A página de um curso deve descobrir os subcursos pelas subpastas numeradas da pasta desse curso. Cada subpasta precisa começar com um prefixo numérico e conter um `course.json` válido; mostrar o prefixo numérico e ordenar os cards por ele.
 - Mostrar apenas cursos com manifesto válido e campos obrigatórios disponíveis: título, descrição, imagem, link e acesso (`open` ou `locked`). Se a pasta, o manifesto ou algum campo obrigatório estiver ausente ou inválido, omitir esse curso.
 - Cursos `locked` exigem login aprovado para abrir; cursos `open` podem ser acessados sem login.
+
+# ./
+-Só pode existir na pasta raiz os seguintes arquivos:
+--Code (fica todo o codigo do projeto)
+--Learn (trilhas,modulos e capitulos)
+--Agent.md
+--Arquiteture.md
+--Tasks.md
+--Rules.md
+--Insumos
