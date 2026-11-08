@@ -15,7 +15,7 @@ Ele pode invocar esta skill com os parametros: -c / -check (vai executar o scrip
 ## 1 Passo
 
 try:
-    if exist(Tasks.md && Agent.md && Rules.md && Arquiteture.md):
+    if exist(Tasks.md && Agent.md && Rules.md && Arquiteture.md &&  RunTests.cmd && TasksFormate.cmd && ProjectCheck.cmd && StartIAProject.cmd):
         do nothing
     else:
         run StartIAProject.cmd
